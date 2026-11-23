@@ -9,8 +9,8 @@
 (function () {
   'use strict';
 
-  var URL = 'https://cdn.jsdelivr.net/gh/li-zhenfei/session-transfer@main/s.js';
-  var SELF = URL;
+  // \u56fa\u5b9a\u5230\u5177\u4f53\u63d0\u4ea4\uff1ajsDelivr \u5bf9\u5206\u652f\uff08@main\uff09\u7684\u7f13\u5b58\u5237\u65b0\u751f\u6548\u5f88\u6162\uff0c\u4f1a\u6709\u4eba\u62ff\u5230\u65e7\u7248\u672c
+  var URL = 'https://cdn.jsdelivr.net/gh/li-zhenfei/session-transfer@1b8a558f7a0d1248b8f0625be6412cf8d7236c9a/s.js';
 
   /* ---------- \u7f16\u89e3\u7801 ---------- */
   function utf8ToBin(str) {
@@ -116,7 +116,7 @@
 
   /* ---------- \u5bfc\u5165\u884c\u751f\u6210 / \u526a\u8d34\u677f ---------- */
   function buildImportLine(code) {
-    return "(async()=>{eval(await(await fetch('" + SELF + "')).text());" +
+    return "(async()=>{eval(await(await fetch('" + URL + "')).text());" +
       "await __sess.import('" + code + "');location.reload()})()";
   }
 
