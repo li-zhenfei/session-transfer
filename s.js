@@ -10,7 +10,7 @@
 
   // ==================== \u914d\u7f6e\u5757\uff08\u4ec5\u5de5\u5177 owner \u9700\u8981\u6539\u4e00\u6b21\uff09 ====================
   const CFG = {
-    REPO: 'your-name/session-transfer', // TODO: \u4f60\u7684\u79c1\u6709\u4ed3\u5e93 owner/repo
+    REPO: 'li-zhenfei/session-transfer', // TODO: \u4f60\u7684\u79c1\u6709\u4ed3\u5e93 owner/repo
     TOKEN: '',                          // \u53ef\u7559\u7a7a\uff1a\u7559\u7a7a\u65f6\u9996\u6b21\u4f7f\u7528\u4f1a\u63d0\u793a\u8f93\u5165\u5e76\u7f13\u5b58\u5728\u5f53\u524d\u6807\u7b7e\u9875
     BRANCH: 'main',                     // \u4ed3\u5e93\u9ed8\u8ba4\u5206\u652f\uff08\u8001\u4ed3\u5e93\u53ef\u80fd\u662f master\uff09
     DIR: 'sessions',                    // \u4f1a\u8bdd\u6587\u4ef6\u76ee\u5f55
