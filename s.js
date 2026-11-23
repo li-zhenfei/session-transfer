@@ -146,10 +146,15 @@
       '})().catch(e=>alert("\u5bfc\u5165\u5931\u8d25\uff1a"+e.message))';
   }
 
-  // \u62f7\u8d1d\uff1aDevTools \u63a7\u5236\u53f0\u81ea\u5e26 copy()\uff0c\u65e0\u624b\u52bf\u8981\u6c42\u3001\u4e0d\u5f39\u6743\u9650\uff0c\u4f18\u5148\u7528\uff1b
-  // \u9875\u9762\u73af\u5883\u6ca1\u6709 copy() \u65f6\u9000\u56de execCommand + \u9690\u85cf textarea\u3002
+  // \u62f7\u8d1d\uff1aDevTools \u63a7\u5236\u53f0\u81ea\u5e26 copy()\uff0c\u65e0\u624b\u52bf\u8981\u6c42\u3001\u4e0d\u5f39\u6743\u9650\u3002
+  // \u5173\u952e\uff1acopy() \u53ea\u5728\u63a7\u5236\u53f0\u300c\u540c\u6b65\u6267\u884c\u9636\u6bb5\u300d\u5b58\u5728\uff0cawait \u4e4b\u540e\u5c31\u6ca1\u4e86\uff08\u5b9e\u6d4b\uff09\uff0c
+  // \u6240\u4ee5\u5fc5\u987b\u7531\u8c03\u7528\u65b9\u5728\u7b2c\u4e00\u4e2a await \u4e4b\u524d\u628a copy \u6293\u6210\u53d8\u91cf\u4f20\u8fdb\u6765\uff08cp\uff09\u3002
+  // \u9875\u9762\u73af\u5883\u91cc\u6ca1\u6709 copy() \u65f6\u9000\u56de execCommand + \u9690\u85cf textarea\uff1b
   // \u4e0d\u7528 navigator.clipboard\u2014\u2014\u90e8\u5206\u6d4f\u89c8\u5668\u4f1a\u5f39\u300c\u5141\u8bb8\u8bbf\u95ee\u526a\u8d34\u677f\u300d\u8981\u6c42\u70b9\u4e00\u6b21\u3002
-  function copyText(text) {
+  function copyText(text, cp) {
+    try {
+      if (typeof cp === 'function') { cp(text); return true; }
+    } catch (e) { /* \u7ee7\u7eed */ }
     try {
       if (typeof copy === 'function') { copy(text); return true; }
     } catch (e) { /* \u9875\u9762\u73af\u5883\u6ca1\u6709 copy()\uff0c\u7ee7\u7eed */ }
@@ -235,17 +240,23 @@
   }
 
   // \u5bfc\u51fa\u7aef\u5206\u53d1\u7528\u7684\u90a3\u4e00\u884c\uff08README \u91cc\u7684\u5c31\u662f\u5b83\uff0c\u6539\u7ebf\u8def/\u63d0\u4ea4\u53f7\u540e\u540c\u6b65\u66f4\u65b0\uff09
+  // \u5f00\u5934\u7684 __c \u5fc5\u987b\u5728\u4efb\u4f55 await \u4e4b\u524d\u6267\u884c\uff1a\u63a7\u5236\u53f0 copy() \u53ea\u5728\u540c\u6b65\u9636\u6bb5\u5b58\u5728\u3002
   function buildExportLine() {
-    return '(async()=>{' + loaderBody() + '__sess.add()' +
+    return '(async()=>{var __c=(typeof copy==="function")?copy:null;' + loaderBody() + '__sess.add(__c)' +
       '})().catch(e=>alert("\u52a0\u8f7d\u5931\u8d25\uff1a"+e.message))';
   }
 
   /* ---------- \u5165\u53e3 ---------- */
-  async function add() {
+  async function add(cp) {
+    // \u76f4\u63a5\u7c98\u8d34 __sess.add() \u65f6\uff0c\u8fd9\u91cc\u540c\u6b65\u6267\u884c\uff0c\u80fd\u62ff\u5230\u63a7\u5236\u53f0\u7684 copy()\uff1b
+    // \u7531\u5bfc\u51fa\u884c\u8c03\u7528\u65f6\uff0ccopy \u65e9\u5df2\u968f await \u6d88\u5931\uff0c\u9760\u5916\u5c42\u4f20\u8fdb\u6765\u7684 cp\u3002
+    if (typeof cp !== 'function') {
+      try { if (typeof copy === 'function') cp = copy; } catch (e) { /* \u5ffd\u7565 */ }
+    }
     const code = await exportCode();
     const line = buildImportLine(code);
     console.log(line);
-    if (copyText(line)) {
+    if (copyText(line, cp)) {
       var msg = '\u2705 \u5bfc\u5165\u884c\u5df2\u590d\u5236\uff0c\u76f4\u63a5\u53d1\u7ed9\u5bf9\u65b9';
       if (code.length > 30000) msg += '\uff08\u7ea6 ' + Math.round(code.length / 1024) + 'KB\uff0c\u8f83\u5927\uff0c\u5efa\u8bae\u7528\u6587\u4ef6\u53d1\u9001\uff09';
       toast(msg, true);
