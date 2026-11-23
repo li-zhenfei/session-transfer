@@ -22,13 +22,13 @@
 
   function getToken() {
     if (CFG.TOKEN && CFG.TOKEN.indexOf('XXXX') === -1) return CFG.TOKEN;
-    let t = sessionStorage.getItem(PAT_KEY);
+    let t = localStorage.getItem(PAT_KEY) || sessionStorage.getItem(PAT_KEY);
     if (!t) {
-      t = prompt('\u9996\u6b21\u4f7f\u7528\uff0c\u8bf7\u8f93\u5165 GitHub PAT\uff08\u4ec5\u5f53\u524d\u6807\u7b7e\u9875\u6709\u6548\uff09');
+      t = prompt('\u9996\u6b21\u4f7f\u7528\uff0c\u8bf7\u8f93\u5165 GitHub PAT\uff08\u672c\u6d4f\u89c8\u5668\u8bb0\u4f4f\uff0c\u4e0d\u518d\u8be2\u95ee\uff09');
       if (!t) throw new Error('\u672a\u63d0\u4f9b PAT');
       t = t.trim();
-      sessionStorage.setItem(PAT_KEY, t);
     }
+    localStorage.setItem(PAT_KEY, t); // \u6301\u4e45\u4fdd\u5b58\uff0c\u907f\u514d\u6bcf\u6b21\u91cd\u8f93
     return t;
   }
 
@@ -157,10 +157,10 @@
       console.warn('\u26a0\ufe0f \u5bfc\u51fa\u9875\u9762 host\uff08' + payload.host + '\uff09\u4e0e\u5f53\u524d\u9875\u9762\uff08' + location.hostname + '\uff09\u4e0d\u4e00\u81f4\uff0ccookie \u53ef\u80fd\u5199\u4e0d\u8fdb\u53bb');
     }
     if (wipe) {
-      const pat = sessionStorage.getItem(PAT_KEY); // \u6e05\u7a7a\u65f6\u4fdd\u7559 PAT
+      const pat = localStorage.getItem(PAT_KEY) || sessionStorage.getItem(PAT_KEY); // \u6e05\u7a7a\u65f6\u4fdd\u7559 PAT
       localStorage.clear();
       sessionStorage.clear();
-      if (pat) sessionStorage.setItem(PAT_KEY, pat);
+      if (pat) localStorage.setItem(PAT_KEY, pat);
     }
     if (payload.localStorage) {
       Object.keys(payload.localStorage).forEach(function (k) { localStorage.setItem(k, payload.localStorage[k]); });
