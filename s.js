@@ -12,7 +12,7 @@
   // \u811a\u672c\u6258\u7ba1\u5730\u5740\uff1a\u591a\u7ebf\u8def\uff0c\u9010\u4e2a\u5c1d\u8bd5\u3002jsDelivr \u5076\u53d1\u8fde\u63a5\u88ab\u5173\uff08\u5b9e\u6d4b 7ms RST\uff09\uff0c
   // \u5355\u7ebf\u8def\u4f1a\u5bfc\u81f4\u6574\u6b21\u7c98\u8d34\u76f4\u63a5\u5931\u8d25\uff0c\u6240\u4ee5\u6bcf\u4e2a\u5730\u5740\u90fd\u8981\u515c\u5e95\u3002
   // \u987a\u5e8f\u6309\u5b9e\u6d4b\u901f\u5ea6\u6392\uff1bGitHub API \u6709\u9650\u6d41\u3001\u7f16\u7801\u4e5f\u4e0d\u540c\uff0c\u653e\u6700\u540e\u3002
-  var SHA = 'ab0fac2c84533ba8afec175c5cceb6dd0c8bf11a';
+  var SHA = '8a3af911e14daec25eede6bef60feb8410736313';
   var HOSTS = [
     'https://cdn.jsdelivr.net/gh/li-zhenfei/session-transfer@' + SHA + '/s.js',
     'https://gcore.jsdelivr.net/gh/li-zhenfei/session-transfer@' + SHA + '/s.js',
