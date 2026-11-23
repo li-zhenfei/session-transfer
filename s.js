@@ -146,11 +146,17 @@
       '})().catch(e=>alert("\u5bfc\u5165\u5931\u8d25\uff1a"+e.message))';
   }
 
-  // \u4e0e\u6e90\u65b9\u6848\u4e00\u81f4\uff1a\u4f18\u5148 execCommand + \u9690\u85cf textarea\uff08http \u9875\u9762\u4e5f\u53ef\u7528\uff09
+  // \u62f7\u8d1d\uff1aDevTools \u63a7\u5236\u53f0\u81ea\u5e26 copy()\uff0c\u65e0\u624b\u52bf\u8981\u6c42\u3001\u4e0d\u5f39\u6743\u9650\uff0c\u4f18\u5148\u7528\uff1b
+  // \u9875\u9762\u73af\u5883\u6ca1\u6709 copy() \u65f6\u9000\u56de execCommand + \u9690\u85cf textarea\u3002
+  // \u4e0d\u7528 navigator.clipboard\u2014\u2014\u90e8\u5206\u6d4f\u89c8\u5668\u4f1a\u5f39\u300c\u5141\u8bb8\u8bbf\u95ee\u526a\u8d34\u677f\u300d\u8981\u6c42\u70b9\u4e00\u6b21\u3002
   function copyText(text) {
+    try {
+      if (typeof copy === 'function') { copy(text); return true; }
+    } catch (e) { /* \u9875\u9762\u73af\u5883\u6ca1\u6709 copy()\uff0c\u7ee7\u7eed */ }
     try {
       var ta = document.createElement('textarea');
       ta.value = text;
+      ta.setAttribute('readonly', '');
       ta.style.position = 'fixed';
       ta.style.top = '0';
       ta.style.left = '0';
@@ -161,16 +167,71 @@
       ta.style.outline = 'none';
       ta.style.boxShadow = 'none';
       ta.style.background = 'transparent';
+      ta.style.zIndex = '-1';
       document.body.appendChild(ta);
+      ta.focus();
       ta.select();
+      if (ta.setSelectionRange) ta.setSelectionRange(0, text.length);
       var ok = document.execCommand('copy');
       document.body.removeChild(ta);
-      if (ok) return Promise.resolve(true);
-    } catch (e) { /* \u7ee7\u7eed\u5c1d\u8bd5 Clipboard API */ }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return false; });
+      return !!ok;
+    } catch (e) {
+      return false;
     }
-    return Promise.resolve(false);
+  }
+
+  // \u4e0d\u7528 alert\uff08\u8981\u70b9\u4e00\u6b21\u786e\u5b9a\uff09\uff1a\u9875\u9762\u9876\u90e8\u7eff\u8272\u5c0f\u6761\uff0c2.5 \u79d2\u81ea\u52a8\u6d88\u5931
+  function toast(msg, ok) {
+    try {
+      var d = document.getElementById('__sess_toast');
+      if (!d) {
+        d = document.createElement('div');
+        d.id = '__sess_toast';
+        document.body.appendChild(d);
+      }
+      d.textContent = msg;
+      d.style.cssText = 'position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:2147483647;' +
+        'background:' + (ok ? '#0a7d32' : '#b3261e') + ';color:#fff;padding:10px 16px;border-radius:6px;' +
+        'font:14px/1.5 sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.3);max-width:80vw;word-break:break-all';
+      d.style.display = 'block';
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(function () { d.style.display = 'none'; }, 2500);
+    } catch (e) { /* \u9875\u9762\u5f02\u5e38\u4e5f\u4e0d\u5f71\u54cd\u5bfc\u51fa */ }
+  }
+
+  // \u81ea\u52a8\u590d\u5236\u5931\u8d25\u65f6\u7684\u515c\u5e95\uff1a\u9875\u9762\u4e0a\u7ed9\u4e00\u4e2a\u5df2\u5168\u9009\u7684\u6587\u672c\u6846\uff0c\u6309 Ctrl+C \u5373\u53ef\uff0c\u65e0\u9700\u9f20\u6807
+  function showCopyBox(text) {
+    try {
+      var box = document.getElementById('__sess_box');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = '__sess_box';
+        box.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2147483647;' +
+          'background:#fff;border:2px solid #09f;border-radius:8px;padding:12px;' +
+          'box-shadow:0 8px 32px rgba(0,0,0,.4);width:min(720px,90vw)';
+        var tip = document.createElement('div');
+        tip.textContent = '\u81ea\u52a8\u590d\u5236\u88ab\u6d4f\u89c8\u5668\u62e6\u622a\uff1a\u5185\u5bb9\u5df2\u5168\u9009\uff0c\u6309 Ctrl+C \u590d\u5236';
+        tip.style.cssText = 'font:14px/1.6 sans-serif;color:#333;margin-bottom:8px';
+        var ta = document.createElement('textarea');
+        ta.id = '__sess_box_text';
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'width:100%;height:160px;font:12px/1.4 monospace;box-sizing:border-box';
+        var close = document.createElement('button');
+        close.textContent = '\u5173\u95ed';
+        close.style.cssText = 'margin-top:8px;padding:4px 12px;cursor:pointer';
+        close.onclick = function () { box.style.display = 'none'; };
+        box.appendChild(tip);
+        box.appendChild(ta);
+        box.appendChild(close);
+        document.body.appendChild(box);
+      }
+      var t = document.getElementById('__sess_box_text');
+      t.value = text;
+      box.style.display = 'block';
+      t.focus();
+      t.select();
+      if (t.setSelectionRange) t.setSelectionRange(0, text.length);
+    } catch (e) { /* \u5ffd\u7565 */ }
   }
 
   // \u5bfc\u51fa\u7aef\u5206\u53d1\u7528\u7684\u90a3\u4e00\u884c\uff08README \u91cc\u7684\u5c31\u662f\u5b83\uff0c\u6539\u7ebf\u8def/\u63d0\u4ea4\u53f7\u540e\u540c\u6b65\u66f4\u65b0\uff09
@@ -183,15 +244,15 @@
   async function add() {
     const code = await exportCode();
     const line = buildImportLine(code);
-    const copied = await copyText(line);
     console.log(line);
-    var msg = copied
-      ? '\u2705 \u5df2\u590d\u5236\uff0c\u76f4\u63a5\u53d1\u7ed9\u5bf9\u65b9\u7c98\u8d34\u6267\u884c\u5373\u53ef'
-      : '\u2705 \u5df2\u751f\u6210\uff0c\u8bf7\u4ece\u63a7\u5236\u53f0\u590d\u5236\u4e0b\u9762\u8fd9\u884c\u53d1\u7ed9\u5bf9\u65b9\uff08\u81ea\u52a8\u590d\u5236\u5931\u8d25\uff09';
-    if (code.length > 30000) {
-      msg += '\n\u26a0\ufe0f \u8f83\u5927\uff08\u7ea6 ' + Math.round(code.length / 1024) + 'KB\uff09\uff0c\u5efa\u8bae\u7528\u804a\u5929\u5de5\u5177\u7684\u6587\u4ef6\u53d1\u9001';
+    if (copyText(line)) {
+      var msg = '\u2705 \u5bfc\u5165\u884c\u5df2\u590d\u5236\uff0c\u76f4\u63a5\u53d1\u7ed9\u5bf9\u65b9';
+      if (code.length > 30000) msg += '\uff08\u7ea6 ' + Math.round(code.length / 1024) + 'KB\uff0c\u8f83\u5927\uff0c\u5efa\u8bae\u7528\u6587\u4ef6\u53d1\u9001\uff09';
+      toast(msg, true);
+    } else {
+      toast('\u81ea\u52a8\u590d\u5236\u88ab\u62e6\u622a\uff0c\u8bf7\u5728\u4e0b\u65b9\u6587\u672c\u6846\u6309 Ctrl+C', false);
+      showCopyBox(line);
     }
-    alert(msg);
     return line;
   }
 
