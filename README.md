@@ -13,8 +13,10 @@
 **导出（把当前登录态给别人）：** 复制下面整行，粘进控制台回车。工具会把「导入行」自动复制到剪贴板并提示，直接发给对方即可。
 
 ```js
-(async()=>{eval(await(await fetch('https://cdn.jsdelivr.net/gh/li-zhenfei/session-transfer@main/s.js')).text());__sess.add()})()
+(async()=>{eval(await(await fetch('https://cdn.jsdelivr.net/gh/li-zhenfei/session-transfer@ab0fac2c84533ba8afec175c5cceb6dd0c8bf11a/s.js')).text());__sess.add()})()
 ```
+
+> 地址固定到具体提交（不是 `@main`）。jsDelivr 对分支的缓存刷新很慢，用 `@main` 会有人拿到旧版本；固定提交后内容不可变、人人一致。
 
 **导入（拿到别人的登录态）：** 对方发来的是一整行以 `(async()=>{eval(await(await fetch(` 开头的代码，**原样粘进控制台回车**即可。工具自动写回 cookie / localStorage / sessionStorage，然后刷新页面。
 
@@ -34,7 +36,7 @@
 (async()=>{eval(atob((await(await fetch('https://api.github.com/repos/li-zhenfei/session-transfer/contents/s.js')).json()).content));__sess.add()})()
 ```
 
-> 走 GitHub API，**未登录限 60 次/小时/IP**。公司/医院出口 IP 或代理节点是共享的，常会显示 `加载失败 HTTP 403`（配额已被别人用完），此时换回 jsDelivr 那行或改用「整段粘贴」。
+> 走 GitHub API（始终取默认分支最新内容，无 CDN 缓存问题），**未登录限 60 次/小时/IP**。公司/医院出口 IP 或代理节点是共享的，常会显示 `加载失败 HTTP 403`（配额已被别人用完），此时换回 jsDelivr 那行或改用「整段粘贴」。
 
 ### 备选：整段粘贴（无需托管）
 
@@ -77,8 +79,10 @@
 - 仓库里只放工具代码（`README.md` + `s.js`），**不含任何密钥，也不存放会话数据**
 - 更新工具：把 `session-tool.js` 转成 ASCII 安全版（`s.js`）后覆盖仓库根目录同名文件
   - ASCII 转义的作用：让 loader 的 `atob` + `eval`（备选 loader）直接可执行，不依赖 `TextDecoder`
-- **jsDelivr 缓存**：对 `@main` 默认缓存约 12 小时。更新 `s.js` 后想立刻生效，先访问一次
-  `https://purge.jsdelivr.net/gh/li-zhenfei/session-transfer@main/s.js` 清缓存（返回 `finished` 即可）
+- **jsDelivr 缓存**：分支（`@main`）缓存刷新生效很慢、且各边缘节点不一致。因此：
+  1. `session-tool.js` 里的 `URL` 固定为**具体提交**的地址（每次发版更新）
+  2. 发版流程：改好源码 → 上传 `s.js` 得到新提交号 → 把源码里的 `URL` 改成新提交号 → 再上传一次 → 文档里的导出行同步换成新提交号的地址
+  3. 固定提交的 URL 内容不可变、无需 purge，人人拿到同一版本
 
 生成 `s.js`（把所有非 ASCII 字符转成 `\uXXXX`）：
 
