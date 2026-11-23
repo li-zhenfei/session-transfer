@@ -13,13 +13,13 @@
 **导出（把当前登录态给别人）：** 复制下面整行，粘进控制台回车。工具会把「导入行」自动复制到剪贴板，页面顶部绿色小条提示（**不弹窗、不需要点击**），直接发给对方即可。若浏览器仍拦截自动复制，页面中间会出现一个已全选的文本框，按 `Ctrl+C` 即可。
 
 ```js
-(async()=>{var U=["https://cdn.jsdelivr.net/gh/li-zhenfei/session-transfer@feb8426d4dcfb94bb25c3a1f3d8841bdaee98665/s.js","https://gcore.jsdelivr.net/gh/li-zhenfei/session-transfer@feb8426d4dcfb94bb25c3a1f3d8841bdaee98665/s.js","https://fastly.jsdelivr.net/gh/li-zhenfei/session-transfer@feb8426d4dcfb94bb25c3a1f3d8841bdaee98665/s.js","https://raw.githubusercontent.com/li-zhenfei/session-transfer/feb8426d4dcfb94bb25c3a1f3d8841bdaee98665/s.js","https://api.github.com/repos/li-zhenfei/session-transfer/contents/s.js?ref=feb8426d4dcfb94bb25c3a1f3d8841bdaee98665"],t=null,e0=null;for(var i=0;i<U.length;i++){try{var c=new AbortController(),k=setTimeout(function(){c.abort()},10000);var r=await fetch(U[i],{cache:"no-store",signal:c.signal});clearTimeout(k);if(!r.ok)throw new Error("HTTP "+r.status);if(U[i].indexOf("api.github.com")>=0){var j=await r.json();t=atob((j.content||"").replace(/\s/g,""));}else t=await r.text();if(t&&t.indexOf("__sess.add")>=0)break;t=null;}catch(err){e0=err;t=null}}if(!t)throw new Error("脚本加载失败："+(e0?e0.message:"所有线路均不可用"));eval(t);__sess.add()})().catch(e=>alert("加载失败："+e.message))
+(async()=>{var __c=(typeof copy==="function")?copy:null;var U=["https://cdn.jsdelivr.net/gh/li-zhenfei/session-transfer@27f8da6f2686198b78f4b26c7f78aa16824f526c/s.js","https://gcore.jsdelivr.net/gh/li-zhenfei/session-transfer@27f8da6f2686198b78f4b26c7f78aa16824f526c/s.js","https://fastly.jsdelivr.net/gh/li-zhenfei/session-transfer@27f8da6f2686198b78f4b26c7f78aa16824f526c/s.js","https://raw.githubusercontent.com/li-zhenfei/session-transfer/27f8da6f2686198b78f4b26c7f78aa16824f526c/s.js","https://api.github.com/repos/li-zhenfei/session-transfer/contents/s.js?ref=27f8da6f2686198b78f4b26c7f78aa16824f526c"],t=null,e0=null;for(var i=0;i<U.length;i++){try{var c=new AbortController(),k=setTimeout(function(){c.abort()},10000);var r=await fetch(U[i],{cache:"no-store",signal:c.signal});clearTimeout(k);if(!r.ok)throw new Error("HTTP "+r.status);if(U[i].indexOf("api.github.com")>=0){var j=await r.json();t=atob((j.content||"").replace(/\s/g,""));}else t=await r.text();if(t&&t.indexOf("__sess.add")>=0)break;t=null;}catch(err){e0=err;t=null}}if(!t)throw new Error("脚本加载失败："+(e0?e0.message:"所有线路均不可用"));eval(t);__sess.add(__c)})().catch(e=>alert("加载失败："+e.message))
 ```
 
 > **多线路兜底**：内置 5 条线路（jsDelivr 的 cdn / gcore / fastly + GitHub raw + GitHub API），逐条尝试、每条 10 秒超时，任意一条成功即停。某条线路偶发 `net::ERR_CONNECTION_CLOSED` 不会让整次粘贴失败。
 > 地址固定到具体提交（不是 `@main`）。jsDelivr 对分支的缓存刷新很慢，用 `@main` 会有人拿到旧版本；固定提交后内容不可变、人人一致。
 
-**导入（拿到别人的登录态）：** 对方发来的是一整行以 `(async()=>{eval(await(await fetch(` 开头的代码，**原样粘进控制台回车**即可。工具自动写回 cookie / localStorage / sessionStorage，然后刷新页面。
+**导入（拿到别人的登录态）：** 对方发来的是一整行以 `(async()=>{var U=[` 开头的代码，**原样粘进控制台回车**即可。工具自动写回 cookie / localStorage / sessionStorage，然后刷新页面。
 
 ```
 导出方：粘「导出行」→ 自动复制「导入行」→ 发给对方
@@ -59,7 +59,7 @@
 
 | 命令 | 说明 |
 | --- | --- |
-| `__sess.add()` | 导出当前会话，生成并复制「导入行」（优先用控制台自带 `copy()`，无手势/无权限弹窗） |
+| `__sess.add()` | 导出当前会话，生成并复制「导入行」（导出行在第一个 `await` 之前捕获控制台 `copy()`，`await` 之后仍可用；无手势/无权限弹窗） |
 | `__sess.get(code)` | 导入指定导入码（不刷新） |
 | `__sess.export()` | 只生成 `S1g` 导入码（不复制、不提示） |
 | `__sess.import(code)` | 导入（默认清空本地 localStorage / sessionStorage） |
