@@ -13,9 +13,10 @@
 **导出（把当前登录态给别人）：** 复制下面整行，粘进控制台回车。工具会把「导入行」自动复制到剪贴板并提示，直接发给对方即可。
 
 ```js
-(async()=>{eval(await(await fetch('https://cdn.jsdelivr.net/gh/li-zhenfei/session-transfer@ab0fac2c84533ba8afec175c5cceb6dd0c8bf11a/s.js')).text());__sess.add()})()
+(async()=>{var U=["https://cdn.jsdelivr.net/gh/li-zhenfei/session-transfer@8a3af911e14daec25eede6bef60feb8410736313/s.js","https://gcore.jsdelivr.net/gh/li-zhenfei/session-transfer@8a3af911e14daec25eede6bef60feb8410736313/s.js","https://fastly.jsdelivr.net/gh/li-zhenfei/session-transfer@8a3af911e14daec25eede6bef60feb8410736313/s.js","https://raw.githubusercontent.com/li-zhenfei/session-transfer/8a3af911e14daec25eede6bef60feb8410736313/s.js","https://api.github.com/repos/li-zhenfei/session-transfer/contents/s.js?ref=8a3af911e14daec25eede6bef60feb8410736313"],t=null,e0=null;for(var i=0;i<U.length;i++){try{var c=new AbortController(),k=setTimeout(function(){c.abort()},10000);var r=await fetch(U[i],{cache:"no-store",signal:c.signal});clearTimeout(k);if(!r.ok)throw new Error("HTTP "+r.status);if(U[i].indexOf("api.github.com")>=0){var j=await r.json();t=atob((j.content||"").replace(/\s/g,""));}else t=await r.text();if(t&&t.indexOf("__sess.add")>=0)break;t=null;}catch(err){e0=err;t=null}}if(!t)throw new Error("脚本加载失败："+(e0?e0.message:"所有线路均不可用"));eval(t);__sess.add()})().catch(e=>alert("加载失败："+e.message))
 ```
 
+> **多线路兜底**：内置 5 条线路（jsDelivr 的 cdn / gcore / fastly + GitHub raw + GitHub API），逐条尝试、每条 10 秒超时，任意一条成功即停。某条线路偶发 `net::ERR_CONNECTION_CLOSED` 不会让整次粘贴失败。
 > 地址固定到具体提交（不是 `@main`）。jsDelivr 对分支的缓存刷新很慢，用 `@main` 会有人拿到旧版本；固定提交后内容不可变、人人一致。
 
 **导入（拿到别人的登录态）：** 对方发来的是一整行以 `(async()=>{eval(await(await fetch(` 开头的代码，**原样粘进控制台回车**即可。工具自动写回 cookie / localStorage / sessionStorage，然后刷新页面。
@@ -30,15 +31,9 @@
 > 走 jsDelivr CDN，不受 GitHub 未登录接口「60 次/小时/IP」限流影响。
 > 导入行长度随会话大小变化，几 KB 到上百 KB；较大时建议用聊天工具的**文件**发送。
 
-### 备选 loader（jsDelivr 不可达时）
+### 备选：整段粘贴（所有线路都不通时）
 
-```js
-(async()=>{eval(atob((await(await fetch('https://api.github.com/repos/li-zhenfei/session-transfer/contents/s.js')).json()).content));__sess.add()})()
-```
-
-> 走 GitHub API（始终取默认分支最新内容，无 CDN 缓存问题），**未登录限 60 次/小时/IP**。公司/医院出口 IP 或代理节点是共享的，常会显示 `加载失败 HTTP 403`（配额已被别人用完），此时换回 jsDelivr 那行或改用「整段粘贴」。
-
-### 备选：整段粘贴（无需托管）
+> 加载行已经内置 GitHub API 兜底（未登录限 60 次/小时/IP，共享出口 IP 可能 403）。只有**5 条线路全部失败**（弹「脚本加载失败」）或页面禁止 `eval` 时，才需要走这里。
 
 1. 复制 [session-tool.js](session-tool.js) 全文
 2. `F12` → **Console** → 粘贴 → 回车，然后手动执行 `__sess.add()`
@@ -69,6 +64,7 @@
 | `__sess.export()` | 只生成 `S1g` 导入码（不复制、不提示） |
 | `__sess.import(code)` | 导入（默认清空本地 localStorage / sessionStorage） |
 | `__sess.import(code, {wipe:false})` | 导入但不清空本地（可能新旧混杂） |
+| `__sess.line()` | 打印导出端的加载行（多线路兜底，改线路/提交号后用它对文档） |
 | `__sess.help()` | 命令说明 |
 
 ---
@@ -80,9 +76,10 @@
 - 更新工具：把 `session-tool.js` 转成 ASCII 安全版（`s.js`）后覆盖仓库根目录同名文件
   - ASCII 转义的作用：让 loader 的 `atob` + `eval`（备选 loader）直接可执行，不依赖 `TextDecoder`
 - **jsDelivr 缓存**：分支（`@main`）缓存刷新生效很慢、且各边缘节点不一致。因此：
-  1. `session-tool.js` 里的 `URL` 固定为**具体提交**的地址（每次发版更新）
-  2. 发版流程：改好源码 → 上传 `s.js` 得到新提交号 → 把源码里的 `URL` 改成新提交号 → 再上传一次 → 文档里的导出行同步换成新提交号的地址
+  1. `session-tool.js` 里的 `SHA` 固定为**具体提交号**（每次发版更新），5 条线路都由它拼出
+  2. 发版流程：改好源码 → 上传 `s.js` 得到新提交号 → 把源码里的 `SHA` 改成新提交号 → 再上传一次 → 用 `__sess.line()` 打印新的导出行贴回本文档
   3. 固定提交的 URL 内容不可变、无需 purge，人人拿到同一版本
+  4. 加载行内置 5 条线路轮询，任何一条线路故障都会自动切下一条
 
 生成 `s.js`（把所有非 ASCII 字符转成 `\uXXXX`）：
 
@@ -116,9 +113,10 @@ fs.writeFileSync('s.js', out, 'ascii');
 
 | 提示 | 原因 |
 | --- | --- |
-| `加载失败 HTTP 403` | 用的是 GitHub API 那行，且当前出口 IP（公司/医院 NAT、代理节点）的 60 次/小时配额已用完 → 换 jsDelivr 那行 |
-| `加载失败 HTTP 404` | 仓库路径/分支写错，或 `s.js` 被删 |
-| `加载失败：Failed to fetch` | 网络不通或域名被拦截，试备选 loader 或整段粘贴 |
+| `加载失败 HTTP 403` | 走到 GitHub API 那条兜底线路，且当前出口 IP 的 60 次/小时配额已用完 → 前几条线路通常已成功，不会走到这里 |
+| `加载失败 HTTP 404` | 提交号写错，或 `s.js` 被删 |
+| `net::ERR_CONNECTION_CLOSED` | 某条线路被代理/安全设备断开；加载行会自动换下一条，不需要手工处理 |
+| `加载失败：failed to fetch` | 5 条线路都不通 → 改用「整段粘贴」 |
 | `这看起来是脚本或网址，不是导入行` | 只粘了 loader 却没有带导入码；导入请粘贴对方发来的**整行** |
 | `导入码格式不正确（应以 S1g 开头）` | 粘贴内容不完整或被截断，重新复制整行 |
 | `当前浏览器不支持解压，请换 Chrome/Edge` | 导出端用了 gzip，导入端浏览器太老 |
