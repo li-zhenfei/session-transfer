@@ -1,25 +1,14 @@
 /*!
  * session-tool \u2014\u2014 \u4f1a\u8bdd\u642c\u8fd0\u5de5\u5177\uff08cookie + localStorage + sessionStorage\uff09
  * \u4ea4\u4e92\u7167\u642c\u539f\u5de5\u5177\uff1a\u7c98\u8d34\u4e00\u884c \u2192 \u81ea\u52a8\u590d\u5236\u4e00\u884c \u2192 \u5bf9\u65b9\u7c98\u8d34\u90a3\u4e00\u884c\u3002
- * \u65e0 token\u3001\u65e0\u540e\u7aef\uff1a\u4f1a\u8bdd\u538b\u7f29\u540e\u76f4\u63a5\u5185\u5d4c\u5728\u300c\u5bfc\u5165\u884c\u300d\u91cc\u4f20\u9012\u3002
+ * \u65e0 token\u3001\u65e0\u540e\u7aef\u3001\u65e0 CDN\uff1a\u5bfc\u51fa\u884c\u5185\u5d4c\u538b\u7f29\u540e\u7684\u672c\u811a\u672c\uff0c\u5bfc\u5165\u884c\u5185\u8054\u5bfc\u5165\u903b\u8f91\uff0c
+ * \u4e24\u6761\u7ebf\u90fd\u662f\u81ea\u5305\u542b\u7684\uff0c\u4e0d\u53d1\u8d77\u4efb\u4f55\u7f51\u7edc\u8bf7\u6c42\uff08\u5185\u7f51/\u4ee3\u7406\u73af\u5883\u4e5f\u80fd\u7528\uff09\u3002
  *
  *   \u5bfc\u51fa\uff1a\u63a7\u5236\u53f0\u7c98\u8d34\u5bfc\u51fa\u884c \u2014\u2014 \u81ea\u52a8\u590d\u5236\u5bfc\u5165\u884c\u5e76\u63d0\u793a
  *   \u5bfc\u5165\uff1a\u63a7\u5236\u53f0\u7c98\u8d34\u5bf9\u65b9\u53d1\u6765\u7684\u5bfc\u5165\u884c \u2014\u2014 \u81ea\u52a8\u5199\u56de\u5e76\u5237\u65b0\u9875\u9762
  */
 (function () {
   'use strict';
-
-  // \u811a\u672c\u6258\u7ba1\u5730\u5740\uff1a\u591a\u7ebf\u8def\uff0c\u9010\u4e2a\u5c1d\u8bd5\u3002jsDelivr \u5076\u53d1\u8fde\u63a5\u88ab\u5173\uff08\u5b9e\u6d4b 7ms RST\uff09\uff0c
-  // \u5355\u7ebf\u8def\u4f1a\u5bfc\u81f4\u6574\u6b21\u7c98\u8d34\u76f4\u63a5\u5931\u8d25\uff0c\u6240\u4ee5\u6bcf\u4e2a\u5730\u5740\u90fd\u8981\u515c\u5e95\u3002
-  // \u987a\u5e8f\u6309\u5b9e\u6d4b\u901f\u5ea6\u6392\uff1bGitHub API \u6709\u9650\u6d41\u3001\u7f16\u7801\u4e5f\u4e0d\u540c\uff0c\u653e\u6700\u540e\u3002
-  var SHA = '02bb928ab8f1666b6fc483daedb360472f9b7beb';
-  var HOSTS = [
-    'https://cdn.jsdelivr.net/gh/li-zhenfei/session-transfer@' + SHA + '/s.js',
-    'https://gcore.jsdelivr.net/gh/li-zhenfei/session-transfer@' + SHA + '/s.js',
-    'https://fastly.jsdelivr.net/gh/li-zhenfei/session-transfer@' + SHA + '/s.js',
-    'https://raw.githubusercontent.com/li-zhenfei/session-transfer/' + SHA + '/s.js',
-    'https://api.github.com/repos/li-zhenfei/session-transfer/contents/s.js?ref=' + SHA
-  ];
 
   /* ---------- \u7f16\u89e3\u7801 ---------- */
   function utf8ToBin(str) {
@@ -124,25 +113,26 @@
   }
 
   /* ---------- \u5bfc\u5165\u884c\u751f\u6210 / \u526a\u8d34\u677f ---------- */
-  // \u751f\u6210\u300c\u62c9\u811a\u672c \u2192 eval\u300d\u7684\u4ee3\u7801\u7247\u6bb5\uff1a\u9010\u6761\u7ebf\u8def\u5c1d\u8bd5\uff0c10 \u79d2\u8d85\u65f6\uff0c\u4efb\u4e00\u6761\u6210\u529f\u5373\u505c\u3002
-  // \u751f\u6210\u7684\u811a\u672c\u5fc5\u987b\u662f\u7eaf ASCII\uff0c\u4fbf\u4e8e\u6574\u884c\u7c98\u8d34\u3002
-  function loaderBody() {
-    return 'var U=' + JSON.stringify(HOSTS) + ',t=null,e0=null;' +
-      'for(var i=0;i<U.length;i++){try{' +
-        'var c=new AbortController(),k=setTimeout(function(){c.abort()},10000);' +
-        'var r=await fetch(U[i],{cache:"no-store",signal:c.signal});clearTimeout(k);' +
-        'if(!r.ok)throw new Error("HTTP "+r.status);' +
-        'if(U[i].indexOf("api.github.com")>=0){var j=await r.json();t=atob((j.content||"").replace(/\\s/g,""));}' +
-        'else t=await r.text();' +
-        'if(t&&t.indexOf("__sess.add")>=0)break;t=null;' +
-      '}catch(err){e0=err;t=null}}' +
-      'if(!t)throw new Error("\u811a\u672c\u52a0\u8f7d\u5931\u8d25\uff1a"+(e0?e0.message:"\u6240\u6709\u7ebf\u8def\u5747\u4e0d\u53ef\u7528"));' +
-      'eval(t);';
-  }
-
-  function buildImportLine(code) {
-    return '(async()=>{' + loaderBody() +
-      'await __sess.import(' + JSON.stringify(code) + ');location.reload()' +
+  // \u5bfc\u5165\u884c\u5b8c\u5168\u5185\u8054\uff1a\u89e3\u7801 + \u6e05\u7a7a + \u5199\u56de + \u5237\u65b0\uff0c\u4e0d\u52a0\u8f7d\u4efb\u4f55\u5916\u90e8\u811a\u672c\u3002
+  // \u5bf9\u65b9\u65ad\u7f51\u3001\u5185\u7f51\u3001CDN \u88ab\u62e6\u90fd\u4e0d\u5f71\u54cd\u5bfc\u5165\uff08S1g \u89e3\u538b\u9700\u8981 DecompressionStream\uff09\u3002
+  function importLine(code) {
+    return '(async()=>{' +
+        'var C=' + JSON.stringify(code) + ',s,u,t,i;' +
+        'if(C.indexOf("S1g")===0){' +
+          'if(typeof DecompressionStream==="undefined")throw new Error("\u5f53\u524d\u6d4f\u89c8\u5668\u4e0d\u652f\u6301\u89e3\u538b\uff0c\u8bf7\u6362 Chrome/Edge");' +
+          's=atob(C.slice(3));u=new Uint8Array(s.length);for(i=0;i<s.length;i++)u[i]=s.charCodeAt(i);' +
+          't=await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream("gzip"))).text();' +
+        '}else if(C.indexOf("S1r")===0){' +
+          's=atob(C.slice(3));u=new Uint8Array(s.length);for(i=0;i<s.length;i++)u[i]=s.charCodeAt(i);' +
+          't=new TextDecoder().decode(u);' +
+        '}else throw new Error("\u5bfc\u5165\u7801\u683c\u5f0f\u4e0d\u6b63\u786e\uff08\u5e94\u4ee5 S1g \u5f00\u5934\uff09");' +
+        'var p=JSON.parse(t);' +
+        'if(p.host&&p.host!==location.hostname)console.warn("\u26a0\ufe0f \u5bfc\u51fa\u9875\u9762 host\uff08"+p.host+"\uff09\u4e0e\u5f53\u524d\u9875\u9762\uff08"+location.hostname+"\uff09\u4e0d\u4e00\u81f4\uff0ccookie \u53ef\u80fd\u5199\u4e0d\u8fdb\u53bb");' +
+        'localStorage.clear();sessionStorage.clear();' +
+        'if(p.localStorage)Object.keys(p.localStorage).forEach(function(k){localStorage.setItem(k,p.localStorage[k])});' +
+        'if(p.sessionStorage)Object.keys(p.sessionStorage).forEach(function(k){sessionStorage.setItem(k,p.sessionStorage[k])});' +
+        'if(p.cookie)p.cookie.split(";").forEach(function(c){c=c.trim();if(c)document.cookie=c+"; domain="+location.hostname+"; path=/"});' +
+        'location.reload()' +
       '})().catch(e=>alert("\u5bfc\u5165\u5931\u8d25\uff1a"+e.message))';
   }
 
@@ -239,13 +229,6 @@
     } catch (e) { /* \u5ffd\u7565 */ }
   }
 
-  // \u5bfc\u51fa\u7aef\u5206\u53d1\u7528\u7684\u90a3\u4e00\u884c\uff08README \u91cc\u7684\u5c31\u662f\u5b83\uff0c\u6539\u7ebf\u8def/\u63d0\u4ea4\u53f7\u540e\u540c\u6b65\u66f4\u65b0\uff09
-  // \u5f00\u5934\u7684 __c \u5fc5\u987b\u5728\u4efb\u4f55 await \u4e4b\u524d\u6267\u884c\uff1a\u63a7\u5236\u53f0 copy() \u53ea\u5728\u540c\u6b65\u9636\u6bb5\u5b58\u5728\u3002
-  function buildExportLine() {
-    return '(async()=>{var __c=(typeof copy==="function")?copy:null;' + loaderBody() + '__sess.add(__c)' +
-      '})().catch(e=>alert("\u52a0\u8f7d\u5931\u8d25\uff1a"+e.message))';
-  }
-
   /* ---------- \u5165\u53e3 ---------- */
   async function add(cp) {
     // \u76f4\u63a5\u7c98\u8d34 __sess.add() \u65f6\uff0c\u8fd9\u91cc\u540c\u6b65\u6267\u884c\uff0c\u80fd\u62ff\u5230\u63a7\u5236\u53f0\u7684 copy()\uff1b
@@ -254,7 +237,7 @@
       try { if (typeof copy === 'function') cp = copy; } catch (e) { /* \u5ffd\u7565 */ }
     }
     const code = await exportCode();
-    const line = buildImportLine(code);
+    const line = importLine(code);
     console.log(line);
     if (copyText(line, cp)) {
       var msg = '\u2705 \u5bfc\u5165\u884c\u5df2\u590d\u5236\uff0c\u76f4\u63a5\u53d1\u7ed9\u5bf9\u65b9';
@@ -275,16 +258,15 @@
 
   function help() {
     console.log(
-      '\u4f1a\u8bdd\u642c\u8fd0\u5de5\u5177 session-tool\uff08\u65e0 token / \u65e0\u540e\u7aef\uff09\n' +
-      '  \u5bfc\u51fa\uff1a\u7c98\u8d34\u6587\u6863\u91cc\u7684\u52a0\u8f7d\u884c\uff08\u7ed3\u5c3e\u662f __sess.add()\uff09\n' +
-      '  \u5bfc\u5165\uff1a\u7c98\u8d34\u5bf9\u65b9\u53d1\u6765\u7684\u6574\u884c\uff08\u7ed3\u5c3e\u662f location.reload()\uff09\n' +
+      '\u4f1a\u8bdd\u642c\u8fd0\u5de5\u5177 session-tool\uff08\u65e0 token / \u65e0\u540e\u7aef / \u65e0 CDN\uff09\n' +
+      '  \u5bfc\u51fa\uff1a\u7c98\u8d34\u6587\u6863\u91cc\u7684\u5bfc\u51fa\u884c\uff08\u81ea\u5305\u542b\uff0c\u7ed3\u5c3e\u662f __sess.add(__c)\uff09\n' +
+      '  \u5bfc\u5165\uff1a\u7c98\u8d34\u5bf9\u65b9\u53d1\u6765\u7684\u6574\u884c\uff08\u81ea\u5e26\u89e3\u7801\u903b\u8f91\uff0c\u7ed3\u5c3e\u662f location.reload()\uff09\n' +
       '  __sess.add()            \u5bfc\u51fa\u5f53\u524d\u4f1a\u8bdd\uff0c\u590d\u5236\u5bfc\u5165\u884c\n' +
       '  __sess.get(code)        \u4ec5\u5bfc\u5165\uff0c\u4e0d\u5237\u65b0\n' +
-      '  __sess.export()         \u4ec5\u751f\u6210\u5bfc\u5165\u7801\n' +
-      '  __sess.line()           \u6253\u5370\u5bfc\u51fa\u7aef\u7684\u52a0\u8f7d\u884c\uff08\u591a\u7ebf\u8def\u515c\u5e95\uff09\n'
+      '  __sess.export()         \u4ec5\u751f\u6210\u5bfc\u5165\u7801\n'
     );
   }
 
-  window.__sess = { add: add, get: get, export: exportCode, import: importSession, help: help, line: buildExportLine };
+  window.__sess = { add: add, get: get, export: exportCode, import: importSession, help: help };
   console.log('%csession-tool \u5df2\u5c31\u7eea', 'color:#09f');
 })();
